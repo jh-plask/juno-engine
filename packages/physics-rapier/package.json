@@ -1,0 +1,24 @@
+{
+  "name": "@engine/physics-rapier",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "bitecs": "^0.4.0",
+    "@dimforge/rapier3d-simd": "^0.15.0",
+    "@engine/engine": "workspace:*",
+    "@engine/ecs": "workspace:*"
+  },
+  "devDependencies": {
+    "@engine/test-utils": "workspace:*",
+    "typescript": "^5.7.0",
+    "@dimforge/rapier3d-compat": "^0.15.0"
+  }
+}

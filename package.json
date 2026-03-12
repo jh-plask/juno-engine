@@ -1,0 +1,20 @@
+{
+  "name": "juno",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "pnpm -r run typecheck",
+    "dev": "pnpm --filter sandbox dev",
+    "lint:trycatch": "eslint . -c eslint.config.js"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.0",
+    "@vitest/coverage-v8": "^4.0.0",
+    "vite-tsconfig-paths": "^6.0.0",
+    "eslint": "^9.0.0",
+    "typescript-eslint": "^8.0.0"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/engine" },
+    { "path": "packages/ecs" },
+    { "path": "packages/math" },
+    { "path": "packages/assets" },
+    { "path": "packages/shaders" },
+    { "path": "packages/render-typegpu" },
+    { "path": "packages/physics-rapier" },
+    { "path": "apps/sandbox" }
+  ]
+}
