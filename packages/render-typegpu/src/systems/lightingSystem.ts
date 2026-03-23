@@ -56,7 +56,7 @@ export function createLightingSystem(
     stagingU32: lights.u32,
 
     extract(world: EngineWorld) {
-      extractLights(world, lightFrame, lights.f32, lights.u32);
+      extractLights(world, lightFrame, lights.f32, lights.u32, maxLights);
     },
 
     flush(ambientR: number, ambientG: number, ambientB: number) {

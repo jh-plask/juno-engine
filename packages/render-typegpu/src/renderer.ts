@@ -253,67 +253,68 @@ export async function createRenderer(
     cluster.prepare(vpW, vpH, cfg.near, cfg.far, invProjX, invProjY);
     diag.cpuTimes.prepare = performance.now() - tPrepare;
 
-    // 3. Shadow passes — render depth from each shadow light's viewpoint
+    // 3. Shadow passes — single encoder, one render pass per shadow light
     const tShadow = performance.now();
     if (cfg.shadowsEnabled) {
+      // Pre-build per-light VP buffers and bind groups for all shadow lights
+      const shadowLightVPs: { vpData: Float32Array; rect: typeof shadowAtlasRects[0] }[] = [];
       let shadowIdx = 0;
       for (let i = 0; i < lighting.lightFrame.lightCount && shadowIdx < cfg.maxShadowLights; i++) {
         const lightBase = i * LIGHT_FLOATS;
         const lightType = lighting.stagingU32[lightBase + 3];
-
         if (lightType === LIGHT_TYPE_DIRECTIONAL || lightType === LIGHT_TYPE_SPOT) {
           const rect = shadowAtlasRects[shadowIdx];
-          if (!rect) { shadowIdx++; continue; }
+          if (rect) {
+            const vpData = new Float32Array(16);
+            vpData.set(lighting.stagingF32.subarray(lightBase + 16, lightBase + 32));
+            shadowLightVPs.push({ vpData, rect });
+          }
+          shadowIdx++;
+        }
+      }
+      diag.shadowLights = shadowLightVPs.length;
 
-          // Read the VP matrix we packed earlier and write to raw GPU buffer
-          const vpOffset = lightBase + 16;
-          lightVPStaging.set(lighting.stagingF32.subarray(vpOffset, vpOffset + 16));
-          root.device.queue.writeBuffer(shadowPass.lightVPBuffer, 0, lightVPStaging);
+      if (shadowLightVPs.length > 0) {
+        const encoder = root.device.createCommandEncoder();
+        const { frame } = scene;
+        const MESH_PLANE = 4;
 
-          // Render all batches using raw WebGPU (depth-only, no fragment stage)
-          // Each shadow light renders to its own tile in the atlas via viewport
-          const encoder = root.device.createCommandEncoder();
-          const isFirstShadow = shadowIdx === 0;
-          const shadowRenderPass = encoder.beginRenderPass({
+        for (let si = 0; si < shadowLightVPs.length; si++) {
+          const { vpData, rect } = shadowLightVPs[si]!;
+
+          // Update VP uniform for this light
+          root.device.queue.writeBuffer(shadowPass.lightVPBuffer, 0, vpData.buffer);
+
+          const pass = encoder.beginRenderPass({
             colorAttachments: [],
             depthStencilAttachment: {
               view: shadowAtlasRaw.depthView,
               depthClearValue: 1.0,
-              depthLoadOp: isFirstShadow ? 'clear' : 'load',
+              depthLoadOp: si === 0 ? 'clear' : 'load',
               depthStoreOp: 'store',
             },
           });
-          shadowRenderPass.setPipeline(shadowPass.pipeline);
-          shadowRenderPass.setBindGroup(0, shadowPass.lightVPBindGroup);
-          shadowRenderPass.setBindGroup(1, shadowInstanceBG);
-          // Viewport restricts rendering to this light's atlas tile
-          shadowRenderPass.setViewport(
-            rect.pixelX, rect.pixelY, rect.pixelSize, rect.pixelSize,
-            0, 1,
-          );
-          shadowRenderPass.setScissorRect(
-            rect.pixelX, rect.pixelY, rect.pixelSize, rect.pixelSize,
-          );
+          pass.setPipeline(shadowPass.pipeline);
+          pass.setBindGroup(0, shadowPass.lightVPBindGroup);
+          pass.setBindGroup(1, shadowInstanceBG);
+          pass.setViewport(rect.pixelX, rect.pixelY, rect.pixelSize, rect.pixelSize, 0, 1);
+          pass.setScissorRect(rect.pixelX, rect.pixelY, rect.pixelSize, rect.pixelSize);
 
-          const { frame } = scene;
-          const MESH_PLANE = 4; // ground plane — shadow receiver, not caster
           for (let b = 0; b < frame.batches.length; b++) {
             const batch = frame.batches[b]!;
-            if (batch.mesh === MESH_PLANE) continue; // skip ground in shadow pass
+            if (batch.mesh === MESH_PLANE) continue;
             const mesh = world.assets.meshes.get(batch.mesh as MeshHandle) as MeshGpu | undefined;
             if (!mesh) continue;
 
             const rawVB = (mesh.vertexBuffer as any).buffer as GPUBuffer;
             const rawIB = (mesh.indexBuffer as any).buffer as GPUBuffer;
-            shadowRenderPass.setVertexBuffer(0, rawVB);
-            shadowRenderPass.setIndexBuffer(rawIB, 'uint32');
-            shadowRenderPass.drawIndexed(mesh.indexCount, batch.instanceCount, 0, 0, batch.firstInstance);
+            pass.setVertexBuffer(0, rawVB);
+            pass.setIndexBuffer(rawIB, 'uint32');
+            pass.drawIndexed(mesh.indexCount, batch.instanceCount, 0, 0, batch.firstInstance);
           }
-
-          shadowRenderPass.end();
-          root.device.queue.submit([encoder.finish()]);
-          shadowIdx++;
+          pass.end();
         }
+        root.device.queue.submit([encoder.finish()]); // single submit for all shadow passes
       }
     }
     diag.cpuTimes.shadow = performance.now() - tShadow;

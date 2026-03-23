@@ -86,6 +86,7 @@ export function extractLights(
   out: LightExtract,
   staging: Float32Array,
   u32staging: Uint32Array,
+  maxLights = 1024,
 ): void {
   let count = 0;
 
@@ -95,7 +96,7 @@ export function extractLights(
     [PointLight, Light, WorldTransform],
     asBuffer,
   );
-  for (let i = 0; i < points.length; i++) {
+  for (let i = 0; i < points.length && count < maxLights; i++) {
     const eid = points[i]!;
     const wbase = eid * 16;
     packLightCore(
@@ -117,7 +118,7 @@ export function extractLights(
     [SpotLight, Light, WorldTransform],
     asBuffer,
   );
-  for (let i = 0; i < spots.length; i++) {
+  for (let i = 0; i < spots.length && count < maxLights; i++) {
     const eid = spots[i]!;
     const wbase = eid * 16;
     packLightCore(
@@ -139,7 +140,7 @@ export function extractLights(
     [DirectionalLight, Light, WorldTransform],
     asBuffer,
   );
-  for (let i = 0; i < dirs.length; i++) {
+  for (let i = 0; i < dirs.length && count < maxLights; i++) {
     const eid = dirs[i]!;
     packLightCore(
       staging, u32staging, count * LIGHT_FLOATS,

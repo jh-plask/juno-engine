@@ -31,7 +31,8 @@ const assignAllLightsFn = tgpu.computeFn({
 
   if (clusterIdx >= totalClusters) { return; }
 
-  const numLights = constants.numLights;
+  // Cap per-cluster lights to prevent buffer overflow
+  const numLights = std.min(constants.numLights, d.u32(128));
   const offset = std.atomicAdd(LightCullingGroup.$.globalCounter.count, numLights);
 
   for (let i = d.u32(0); i < numLights; i += 1) {

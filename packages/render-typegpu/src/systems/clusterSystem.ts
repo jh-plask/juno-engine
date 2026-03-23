@@ -129,6 +129,11 @@ export function createClusterSystem(
       const newGrid = computeClusterGrid(vpW, vpH);
 
       if (newGrid.totalClusters !== grid.totalClusters) {
+        // Destroy old buffers to prevent GPU memory leaks
+        aabbBuffer.destroy();
+        lightGridBuffer.destroy();
+        indexListBuffer.destroy();
+
         aabbBuffer = root.createBuffer(d.arrayOf(ClusterAABB, newGrid.totalClusters)).$usage('storage');
         lightGridBuffer = root.createBuffer(d.arrayOf(d.vec2u, newGrid.totalClusters)).$usage('storage');
         indexListBuffer = root.createBuffer(
