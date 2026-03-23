@@ -4,7 +4,7 @@
  * TypeGPU's compiled writer expects named-property access ({x,y,z,w} for vectors,
  * {columns:[...]} for matrices). These types are used only on cold paths (mesh upload,
  * material init) where object creation cost is negligible. The hot path (per-frame
- * instance + camera writes) bypasses TypeGPU entirely via gpuWrite.ts.
+ * instance + camera writes) bypasses TypeGPU entirely via stagedBuffer.ts.
  */
 
 export interface GpuVec2 { x: number; y: number }

@@ -7,7 +7,7 @@ import {
   Renderable,
   WorldTransform,
 } from '@engine/ecs/components.js';
-import { INSTANCE_FLOATS } from '../gpuWrite.js';
+import { INSTANCE_FLOATS } from '../schemas.js';
 
 export interface CandidateValue {
   entity: number;

@@ -8,7 +8,7 @@ import {
   createFrameExtract,
   type FrameExtract,
 } from '../src/extract/frameExtract.js';
-import { INSTANCE_FLOATS } from '../src/gpuWrite.js';
+import { INSTANCE_FLOATS } from '../src/schemas.js';
 
 let world: EngineWorld;
 let frame: FrameExtract;

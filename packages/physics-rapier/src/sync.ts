@@ -27,6 +27,7 @@ export function addDynamicBoxBody(
   halfX: number,
   halfY: number,
   halfZ: number,
+  restitution = 0,
 ): void {
   if (Parent.value[eid] !== NO_PARENT) {
     throw new Error(
@@ -45,11 +46,34 @@ export function addDynamicBoxBody(
   );
 
   const rb = rapierWorld.createRigidBody(rbDesc);
-  const col = RAPIER.ColliderDesc.cuboid(halfX, halfY, halfZ);
+  const col = RAPIER.ColliderDesc.cuboid(halfX, halfY, halfZ)
+    .setRestitution(restitution);
   rapierWorld.createCollider(col, rb);
 
   addComponents(world as Parameters<typeof addComponents>[0], eid, DynamicBody, BodyRef);
   BodyRef.value[eid] = allocBodyHandle(physics, rb);
+}
+
+/**
+ * Create a static box collider (no entity attachment — world-level collision).
+ * Used for ground planes, walls, and static level geometry.
+ */
+export function addStaticBoxBody(
+  world: EngineWorld,
+  halfX: number,
+  halfY: number,
+  halfZ: number,
+  posX = 0,
+  posY = 0,
+  posZ = 0,
+): void {
+  const physics = world.physics as PhysicsServices;
+  const { RAPIER, world: rapierWorld } = physics;
+
+  const rbDesc = RAPIER.RigidBodyDesc.fixed().setTranslation(posX, posY, posZ);
+  const rb = rapierWorld.createRigidBody(rbDesc);
+  const col = RAPIER.ColliderDesc.cuboid(halfX, halfY, halfZ);
+  rapierWorld.createCollider(col, rb);
 }
 
 /**
@@ -84,6 +108,27 @@ export function addKinematicBoxBody(
 
   addComponents(world as Parameters<typeof addComponents>[0], eid, KinematicBody, BodyRef);
   BodyRef.value[eid] = allocBodyHandle(physics, rb);
+}
+
+/**
+ * Reset a dynamic body's velocity and teleport it to a new position.
+ * Used for respawning objects without carrying old momentum.
+ */
+export function resetDynamicBody(
+  world: EngineWorld,
+  eid: number,
+  x: number, y: number, z: number,
+): void {
+  const physics = world.physics as PhysicsServices;
+  const rb = physics.bodyStore[BodyRef.value[eid]!] as any;
+  if (!rb) return;
+  rb.setTranslation({ x, y, z }, true);
+  rb.setLinvel({ x: 0, y: 0, z: 0 }, true);
+  rb.setAngvel({ x: 0, y: 0, z: 0 }, true);
+  LocalTransform.px[eid] = x;
+  LocalTransform.py[eid] = y;
+  LocalTransform.pz[eid] = z;
+  markSubtreeDirty(world, eid);
 }
 
 /**

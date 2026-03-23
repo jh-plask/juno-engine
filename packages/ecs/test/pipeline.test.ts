@@ -10,7 +10,7 @@ import {
   createFrameExtract,
   extractFrame,
 } from '@engine/render-typegpu/extract/frameExtract.js';
-import { INSTANCE_FLOATS } from '@engine/render-typegpu/gpuWrite.js';
+import { INSTANCE_FLOATS } from '@engine/render-typegpu/schemas.js';
 
 // Staging buffers for extractFrame
 const MAX_TEST = 100;

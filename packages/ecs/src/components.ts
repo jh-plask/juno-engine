@@ -60,6 +60,29 @@ export const BodyRef = {
   value: new Uint32Array(MAX),
 };
 
+// ── Light components ─────────────────────────────────────────────────────────
+
+// Tag components for light type dispatch
+export const PointLight = {};
+export const SpotLight = {};
+export const DirectionalLight = {};
+
+// SoA store for light properties shared across all light types.
+// Position comes from WorldTransform; direction is stored here explicitly
+// so directional/spot lights don't require quaternion math for setup.
+export const Light = {
+  colorR: new Float32Array(MAX),
+  colorG: new Float32Array(MAX),
+  colorB: new Float32Array(MAX),
+  intensity: new Float32Array(MAX),
+  radius: new Float32Array(MAX),
+  innerConeAngle: new Float32Array(MAX),
+  outerConeAngle: new Float32Array(MAX),
+  dirX: new Float32Array(MAX),
+  dirY: new Float32Array(MAX),
+  dirZ: new Float32Array(MAX),
+};
+
 // Typed handle casts at the edges
 export const meshOf = (eid: number) => MeshRef.value[eid] as unknown as MeshHandle;
 export const materialOf = (eid: number) => MaterialRef.value[eid] as unknown as MaterialHandle;

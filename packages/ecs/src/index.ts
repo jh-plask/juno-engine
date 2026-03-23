@@ -9,6 +9,10 @@ export {
   DynamicBody,
   KinematicBody,
   DirtyBounds,
+  PointLight,
+  SpotLight,
+  DirectionalLight,
+  Light,
   LocalTransform,
   Parent,
   WorldTransform,
@@ -44,7 +48,13 @@ export { updateWorldTransforms } from './systems/transforms.js';
 export { updateVisibility } from './systems/visibility.js';
 
 // Prefabs
-export { spawnCamera, spawnMeshNode } from './prefabs.js';
+export {
+  spawnCamera,
+  spawnMeshNode,
+  spawnDirectionalLight,
+  spawnPointLight,
+  spawnSpotLight,
+} from './prefabs.js';
 
 // Serialization
 export { createWorldSnapshotIO, rebuildHierarchy } from './serialization.js';
